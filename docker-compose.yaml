@@ -1,32 +1,53 @@
+#############################
+# NETWORKS
+#############################
+networks:
+  dokploy-network:
+    external: true    # 👈 Use Dokploy-managed network
+
+
+#############################
+# SERVICES
+#############################
 services:
+
   ollama:
-    volumes:
-      - ollama:/root/.ollama
+    image: ollama/ollama:latest   # 👈 CPU build for CPX41 (recommended)
     container_name: ollama
-    pull_policy: always
-    tty: true
     restart: unless-stopped
-    image: ollama/ollama:${OLLAMA_DOCKER_TAG-latest}
+    tty: true
+    networks:
+      - dokploy-network           # 👈 Allow connectivity from WebUI + proxy
+    volumes:
+      - ollama:/root/.ollama      # 👈 Persist models + cache
 
   open-webui:
+    container_name: open-webui
     build:
       context: .
       dockerfile: Dockerfile
-    image: ghcr.io/open-webui/open-webui:${WEBUI_DOCKER_TAG-main}
-    container_name: open-webui
-    volumes:
-      - open-webui:/app/backend/data
+    image: ghcr.io/open-webui/open-webui:main
     depends_on:
       - ollama
-    ports:
-      - ${OPEN_WEBUI_PORT-3000}:8080
+    restart: unless-stopped
+    networks:
+      - dokploy-network
+    volumes:
+      - open-webui:/app/backend/data
     environment:
-      - 'OLLAMA_BASE_URL=http://ollama:11434'
-      - 'WEBUI_SECRET_KEY='
+      # 👇 WebUI connects to Ollama via internal docker hostname
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - WEBUI_SECRET_KEY=${WEBUI_SECRET_KEY}
+    ports:
+      # 👇 Expose Open-WebUI to Dokploy so it can apply HTTPS on port 443
+      - "3000:8080"
     extra_hosts:
       - host.docker.internal:host-gateway
-    restart: unless-stopped
 
+
+#############################
+# VOLUMES
+#############################
 volumes:
   ollama: {}
   open-webui: {}
