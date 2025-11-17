@@ -38,9 +38,14 @@ services:
       # 👇 WebUI connects to Ollama via internal docker hostname
       - OLLAMA_BASE_URL=http://ollama:11434
       - WEBUI_SECRET_KEY=${WEBUI_SECRET_KEY}
-    ports:
-      # 👇 Expose Open-WebUI to Dokploy so it can apply HTTPS on port 443
-      - "3000:8080"
+    labels:
+      - "traefik.enable=true"
+      # router
+      - "traefik.http.routers.openwebui.rule=Host(`webui.fincident.org`)"
+      - "traefik.http.routers.openwebui.entrypoints=websecure"
+      - "traefik.http.routers.openwebui.tls.certresolver=letsencrypt"
+      # service backend (container port 8080)
+      - "traefik.http.services.openwebui.loadbalancer.server.port=8080"
     extra_hosts:
       - host.docker.internal:host-gateway
 
