@@ -4,6 +4,7 @@
 networks:
   dokploy-network:
     external: true    # 👈 Use Dokploy-managed network
+    name: dokploy-network    # ← IMPORTANT, forces usage of Traefik’s real network
 
 
 #############################
@@ -40,6 +41,7 @@ services:
       - WEBUI_SECRET_KEY=${WEBUI_SECRET_KEY}
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=dokploy-network"     # 👈 REQUIRED
       # router
       - "traefik.http.routers.openwebui.rule=Host(`webui.fincident.org`)"
       - "traefik.http.routers.openwebui.entrypoints=websecure"
