@@ -21,10 +21,7 @@ services:
       - dokploy-network           # 👈 Allow connectivity from WebUI + proxy
     volumes:
       - ollama:/root/.ollama      # 👈 Persist models + cache
-    deploy:
-      resources:
-        limits:
-          memory: 8g   # allow up to 8 GiB RAM
+    mem_limit: 8g    # <-- allow more RAM (adjust depending on your free memory)
 
   open-webui:
     container_name: open-webui
